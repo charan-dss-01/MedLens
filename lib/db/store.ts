@@ -7,7 +7,6 @@ import {
   ConflictItem, 
   TimelineEvent, 
   AuditLog, 
-  AISummary,
   ReferenceRangeStatus 
 } from '../types';
 import { encryptSensitiveData, decryptSensitiveData } from '../security/crypto';

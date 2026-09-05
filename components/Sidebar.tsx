@@ -8,10 +8,7 @@ import {
   Users, 
   CheckSquare, 
   ShieldCheck, 
-  History, 
-  FileText,
-  Activity,
-  AlertTriangle
+  History
 } from 'lucide-react';
 
 export default function Sidebar() {

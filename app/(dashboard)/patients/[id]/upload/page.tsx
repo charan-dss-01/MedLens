@@ -10,11 +10,7 @@ import {
   AlertCircle, 
   RefreshCw, 
   ShieldCheck, 
-  ArrowRight, 
-  Cpu, 
-  CheckSquare, 
-  Lock,
-  Layers
+  ArrowRight
 } from 'lucide-react';
 
 export default function ReportUploadPage({ params }: { params: { id: string } }) {

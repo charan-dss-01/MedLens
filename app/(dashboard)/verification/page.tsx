@@ -9,11 +9,8 @@ import {
   XCircle, 
   Edit3, 
   Search, 
-  Filter, 
   FileText, 
   User, 
-  ShieldCheck, 
-  ArrowRight,
   RefreshCw,
   Info
 } from 'lucide-react';

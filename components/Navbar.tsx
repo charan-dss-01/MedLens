@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Activity, Lock, LogOut, User, CheckCircle2 } from 'lucide-react';
+import { Activity, Lock, LogOut, CheckCircle2 } from 'lucide-react';
 
 export default function Navbar() {
   const router = useRouter();

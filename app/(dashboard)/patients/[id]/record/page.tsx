@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PatientSubNav from '@/components/PatientSubNav';
 import SideBySideView from '@/components/SideBySideView';
 import { LabResult, MedicalReport, Patient } from '@/lib/types';
@@ -14,7 +14,7 @@ export default function StructuredRecordPage({ params }: { params: { id: string 
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const res = await fetch(`/api/patients/${params.id}`);
       const json = await res.json();
@@ -26,11 +26,11 @@ export default function StructuredRecordPage({ params }: { params: { id: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
 
   useEffect(() => {
     fetchData();
-  }, [params.id]);
+  }, [fetchData]);
 
   const handleVerifyResult = async (
     resultId: string, 

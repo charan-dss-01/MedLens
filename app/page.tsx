@@ -9,13 +9,9 @@ import {
   ArrowRight, 
   Layers, 
   Search, 
-  Clock, 
   Lock, 
   Database, 
-  CheckSquare, 
-  Cpu, 
-  ArrowUpRight,
-  ChevronRight
+  CheckSquare
 } from 'lucide-react';
 
 export default function LandingPage() {

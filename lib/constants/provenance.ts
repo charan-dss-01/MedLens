@@ -1,0 +1,10 @@
+/**
+ * MedLens Data Provenance Constants
+ */
+
+export const PROVENANCE_TYPES = {
+  USER_PROVIDED: 'USER_PROVIDED',
+  DOCUMENT_EXTRACTED: 'DOCUMENT_EXTRACTED',
+  AI_GENERATED: 'AI_GENERATED',
+  HUMAN_VERIFIED: 'HUMAN_VERIFIED'
+} as const;

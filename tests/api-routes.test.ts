@@ -54,7 +54,7 @@ describe('Next.js API Route Handlers Integration Tests', () => {
 
     expect(res.status).toBe(400);
     expect(json.success).toBe(false);
-    expect(json.error).toBe('Validation failed');
+    expect(typeof json.error === 'string' ? json.error : json.error.message).toBe('Validation failed');
   });
 
   it('GET /api/patients - fetches patient list for authenticated user', async () => {

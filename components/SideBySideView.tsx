@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { LabResult, MedicalReport } from '@/lib/types';
 import { StatusBadge, VerificationBadge } from './StatusBadge';
 import ProvenanceBadge from './ProvenanceBadge';
-import { FileText, Check, Edit2, X, Eye, Activity, Stethoscope } from 'lucide-react';
+import { FileText, Check, Edit2, X, Eye, Stethoscope } from 'lucide-react';
 
 interface SideBySideViewProps {
   reports: MedicalReport[];
