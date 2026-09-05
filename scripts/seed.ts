@@ -576,7 +576,7 @@ export async function runSeed() {
 
     console.log('MongoDB Seed completed successfully!');
     return { success: true, message: 'MongoDB seeded with sample patients, reports, lab results, signals, and audit logs.' };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error seeding MongoDB:', err);
     throw err;
   } finally {

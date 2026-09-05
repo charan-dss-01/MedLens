@@ -9,7 +9,7 @@
  * @param wait Delay in milliseconds (default 300ms)
  * @complexity Time: O(1), Space: O(1)
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait = 300
 ): (...args: Parameters<T>) => void {

@@ -28,10 +28,11 @@ export async function getMongoClient(): Promise<MongoClient | null> {
     isConnected = true;
     console.log('[MongoDB] Successfully connected to MongoDB database.');
     return client;
-  } catch (err: any) {
+  } catch (err: unknown) {
     isConnected = false;
     client = null;
-    console.warn(`[MongoDB] Could not connect to MongoDB database at ${uri}: ${err?.message || err}. Operating in dual in-memory fallback mode.`);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[MongoDB] Could not connect to MongoDB database at ${uri}: ${msg}. Operating in dual in-memory fallback mode.`);
     return null;
   }
 }

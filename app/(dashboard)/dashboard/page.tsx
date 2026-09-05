@@ -14,11 +14,11 @@ import {
   CheckCircle2, 
   Clock, 
   Layers, 
-  ExternalLink,
   Lock,
   ChevronRight
 } from 'lucide-react';
 import ProvenanceBadge from '@/components/ProvenanceBadge';
+import { Patient, LabResult, ClinicalSignal } from '@/lib/types';
 
 interface DashboardData {
   user: { name: string; role: string; email: string };
@@ -53,7 +53,7 @@ interface DashboardData {
     title: string;
     description: string;
     severity: 'attention' | 'warning' | 'info';
-    sourceDocument: string;
+    sourceDocument?: string;
     createdAt: string;
   }>;
 }
@@ -79,19 +79,18 @@ export default function DashboardPage() {
 
       // Calculate Information Quality Metrics
       const totalResults = allResults.length || 1;
-      const verifiedCount = allResults.filter((r: any) => r.verificationStatus === 'VERIFIED' || r.verificationStatus === 'CORRECTED').length;
+      const verifiedCount = allResults.filter((r: LabResult) => r.verificationStatus === 'VERIFIED' || r.verificationStatus === 'CORRECTED').length;
       const verifiedPercent = Math.round((verifiedCount / totalResults) * 100);
-      const pendingCount = verifData.pendingCount || allResults.filter((r: any) => r.verificationStatus === 'PENDING').length;
-      const missingRangeCount = allResults.filter((r: any) => r.status === 'REFERENCE_RANGE_UNAVAILABLE').length;
+      const pendingCount = verifData.pendingCount || allResults.filter((r: LabResult) => r.verificationStatus === 'PENDING').length;
+      const missingRangeCount = allResults.filter((r: LabResult) => r.status === 'REFERENCE_RANGE_UNAVAILABLE').length;
 
       // Extract signals across patients
-      const allSignals: any[] = [];
-      patients.forEach((p: any) => {
+      const allSignals: ClinicalSignal[] = [];
+      patients.forEach((p: Patient) => {
         if (p.symptoms?.includes('fatigue')) {
           allSignals.push({
             id: `sig-1-${p.id}`,
             patientId: p.id,
-            patientName: p.name,
             signalType: 'OUTSIDE_RANGE',
             title: 'Hemoglobin Below Provided Reference Range',
             description: 'September Hemoglobin (10.2 g/dL) is below report range 12.0–15.5 g/dL.',
@@ -102,7 +101,6 @@ export default function DashboardPage() {
           allSignals.push({
             id: `sig-2-${p.id}`,
             patientId: p.id,
-            patientName: p.name,
             signalType: 'VERIFICATION_REQUIRED',
             title: 'Human Verification Required',
             description: 'WBC (11.8 x10³/µL) and Ferritin (11 ng/mL) pending clinician review.',
@@ -117,7 +115,7 @@ export default function DashboardPage() {
         user,
         stats: {
           totalPatients: patients.length,
-          totalReports: patients.reduce((acc: number, p: any) => acc + (p.reportCount || 1), 0),
+          totalReports: patients.reduce((acc: number, p: Patient & { reportCount?: number }) => acc + (p.reportCount || 1), 0),
           pendingVerifications: pendingCount,
           totalSignals: allSignals.length
         },
@@ -128,14 +126,14 @@ export default function DashboardPage() {
           unresolvedConflictsCount: 1,
           missingReferenceRangesCount: missingRangeCount
         },
-        recentPatients: patients.map((p: any) => ({
+        recentPatients: patients.map((p: Patient) => ({
           id: p.id,
           patientCode: p.patientCode,
           name: p.name,
           age: p.age,
           sex: p.sex,
           symptoms: p.symptoms,
-          reportCount: p.reportCount || 2,
+          reportCount: (p as Patient & { reportCount?: number }).reportCount || 2,
           updatedAt: p.updatedAt
         })),
         recentSignals: allSignals.slice(0, 5)

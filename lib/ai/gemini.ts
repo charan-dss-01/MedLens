@@ -86,10 +86,12 @@ export async function extractMedicalReportData(reportText: string, fileName: str
   }
 }
 
+import { LabResult, ClinicalSignal } from '../types';
+
 export async function generateSafePatientSummary(
   patientName: string,
-  labResults: any[],
-  signals: any[]
+  labResults: LabResult[],
+  signals: ClinicalSignal[]
 ): Promise<string> {
   const resultCount = labResults.length;
   const outsideCount = labResults.filter(r => r.status === 'ABOVE_PROVIDED_RANGE' || r.status === 'BELOW_PROVIDED_RANGE').length;
@@ -122,7 +124,7 @@ export async function generateSafePatientSummary(
 }
 
 function simulateDemoExtraction(text: string, fileName: string) {
-  const extractedResults: any[] = [];
+  const extractedResults: Array<Record<string, unknown>> = [];
   const lines = text.split(/\r?\n/);
   
   const ignoredKeywords = [
@@ -187,7 +189,7 @@ function simulateDemoExtraction(text: string, fileName: string) {
         }
       }
 
-      if (!extractedResults.some(r => r.testName.toLowerCase() === testLower)) {
+      if (!extractedResults.some(r => String(r.testName).toLowerCase() === testLower)) {
         extractedResults.push({
           testName,
           category: getCategoryForTest(testName),

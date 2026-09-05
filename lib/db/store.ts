@@ -7,7 +7,8 @@ import {
   ConflictItem, 
   TimelineEvent, 
   AuditLog, 
-  AISummary 
+  AISummary,
+  ReferenceRangeStatus 
 } from '../types';
 import { encryptSensitiveData, decryptSensitiveData } from '../security/crypto';
 
@@ -535,7 +536,7 @@ export async function updateLabResultVerification(
   status: 'VERIFIED' | 'CORRECTED' | 'REJECTED',
   newValue?: string,
   newUnit?: string,
-  newStatus?: any,
+  newStatus?: ReferenceRangeStatus,
   verifiedBy: string = 'Dr. Reviewer'
 ): Promise<LabResult | null> {
   const client = await getMongoClient();
@@ -553,7 +554,7 @@ export async function updateLabResultVerification(
       
       const existing = await db.collection('labResults').findOne(filter);
       if (existing) {
-        const updateFields: any = {
+        const updateFields: Partial<LabResult> = {
           verificationStatus: status,
           verifiedBy,
           verifiedAt: new Date().toISOString(),

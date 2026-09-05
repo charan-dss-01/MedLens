@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     await saveReport(newReport);
 
     // Save Extracted Lab Results with Provenance
-    const labResultsToSave: LabResult[] = extractionResult.extractedResults.map((res: any, idx: number) => ({
+    const labResultsToSave: LabResult[] = extractionResult.extractedResults.map((res: Record<string, unknown>, idx: number) => ({
       id: `res-${Date.now()}-${idx}`,
       patientId,
       reportId,
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         pageNumber: res.sourcePage || 1,
         textSnippet: res.sourceSnippet || `${res.testName}: ${res.value} ${res.unit}`
       },
-      confidence: (res.isSimulatedFallback || isSimulatedFallback) ? Math.min(res.confidence || 70, 75) : (res.confidence || 90),
+      confidence: (res.isSimulatedFallback || isSimulatedFallback) ? Math.min(typeof res.confidence === 'number' ? res.confidence : 70, 75) : (typeof res.confidence === 'number' ? res.confidence : 90),
       verificationStatus: 'PENDING',
       createdAt: new Date().toISOString()
     }));

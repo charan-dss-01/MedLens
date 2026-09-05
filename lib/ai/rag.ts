@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getPatientById, getLabResultsByPatientId, getReportsByPatientId, getSignalsByPatientId } from '../db/store';
-import { RAGAnswer } from '../types';
+import { RAGAnswer, Patient, LabResult, MedicalReport, ClinicalSignal } from '../types';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -137,11 +137,11 @@ Rules:
 
 function buildOfflineRAGAnswer(
   question: string,
-  patient: any,
-  labResults: any[],
-  reports: any[],
-  signals: any[],
-  sourcesMap: any[],
+  patient: Patient,
+  labResults: LabResult[],
+  reports: MedicalReport[],
+  signals: ClinicalSignal[],
+  sourcesMap: Array<{ fileName: string; pageNumber: number; snippet: string }>,
   disclaimer: string
 ): RAGAnswer {
   const q = question.toLowerCase();

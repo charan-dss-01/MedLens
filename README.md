@@ -98,6 +98,21 @@ This architecture is designed around source-of-truth preservation, provenance, u
 
 ---
 
+## 2.1 Requirement & Architecture Traceability Matrix
+
+| Requirement Domain | Technical Capability | Implementation Path | Verification & Safety Mechanism |
+| :--- | :--- | :--- | :--- |
+| **Grounded AI Extraction** | Schema-validated Gemini 1.5 Flash extraction | [`lib/ai/gemini.ts`](file:///c:/Projects/MedLens/lib/ai/gemini.ts) | Strict Zod parsing ([`lib/validation/schemas.ts`](file:///c:/Projects/MedLens/lib/validation/schemas.ts)), prompt injection defense, non-hallucinating null range handling. |
+| **Data Provenance & Traceability** | Exact source snippet, page number, document hash | [`app/api/reports/upload/route.ts`](file:///c:/Projects/MedLens/app/api/reports/upload/route.ts) | SHA-256 duplicate detection ([`lib/security/hash.ts`](file:///c:/Projects/MedLens/lib/security/hash.ts)), `DocumentSource` provenance objects. |
+| **Human-in-the-Loop Governance** | 4-state audit lifecycle (PENDING/VERIFIED/CORRECTED/REJECTED) | [`app/api/patients/[id]/results/[resultId]/verify/route.ts`](file:///c:/Projects/MedLens/app/api/patients/%5Bid%5D/results/%5BresultId%5D/verify/route.ts) | Preserves original AI extraction alongside corrected values with clinician timestamp & audit logs. |
+| **Clinical Signal Engine** | Automated detection of out-of-range & high-uncertainty data | [`lib/db/store.ts`](file:///c:/Projects/MedLens/lib/db/store.ts) | Categorized signal alerts (`OUTSIDE_RANGE`, `VERIFICATION_REQUIRED`, `CONFLICT_DETECTED`). |
+| **Source-Grounded RAG** | Document-backed Q&A with exact snippet citations | [`lib/ai/rag.ts`](file:///c:/Projects/MedLens/lib/ai/rag.ts) | Vector similarity search over indexed chunks with source evidence citations & disclaimer. |
+| **HL7 FHIR R4 Interoperability** | Standard FHIR R4 Patient & Observation JSON export | [`lib/export/fhir.ts`](file:///c:/Projects/MedLens/lib/export/fhir.ts) | `/api/patients/[id]/fhir` endpoint returning valid HL7 FHIR R4 collection bundles. |
+| **Security & Privacy Guard** | Zero unencrypted PII, IDOR protection, XSS escaping | [`lib/security/`](file:///c:/Projects/MedLens/lib/security/) | AES-256 encryption, strict session ownership checks, HTML sanitization, production secret guards. |
+| **WCAG 2.1 AAA Accessibility** | Screen reader navigation, keyboard traps, ARIA live | [`components/`](file:///c:/Projects/MedLens/components/) | Skip-to-content links, `aria-live="polite"` feedback regions, screen-reader status badges. |
+
+---
+
 ## 3. Core Capabilities: Patient Information Intake
 
 MedLens supports structured patient information including:
