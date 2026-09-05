@@ -16,7 +16,7 @@ Patient health information is routinely fragmented across handwritten intake not
 ### Vision
 **MedLens** is an AI-assisted clinical information intelligence platform designed to improve the organization, traceability, and understandability of patient-provided medical information. 
 
-MedLens does **not** replace medical professionals, nor does it diagnose diseases. Instead, it equips clinicians and patients with deterministic reference-range validation, page-level document provenance, human verification workflows, and responsible AI summaries.
+MedLens does **not** replace medical professionals, nor does it diagnose diseases. Instead, it equips clinicians and patients with deterministic reference-range validation, page-level document provenance, human verification workflows, grounded RAG question answering, and responsible AI summaries.
 
 ---
 
@@ -27,11 +27,13 @@ MedLens does **not** replace medical professionals, nor does it diagnose disease
 * **Structured Medical Record**: Organizes extracted information into clear, segregated clinical panels rather than raw AI text.
 * **Reference-Range Awareness**: Identifies whether reported values are low, normal, or high using reference ranges provided in the source report. Never invents reference ranges.
 * **Source & Provenance**: Clearly distinguishes between user-provided information, PDF-extracted data, AI summaries, and human-verified records.
+* **Retrieval-Augmented Generation (RAG)**: Patient-scoped, source-grounded question answering (Ask MedLens) with strict document page citations and anti-hallucination safeguards.
+* **Side-by-Side Dual-Pane Viewer**: Interactive viewer matching extracted clinical metrics on the right with original PDF page highlights and text snippets on the left.
 * **Human-in-the-Loop Verification**: Enables clinicians to `VERIFY`, `EDIT`, or `REJECT` extracted lab results before finalizing structured records.
 * **Clinical Information Signal Engine**: Converts out-of-range metrics, pending verifications, and discrepancies into structured signals (`ATTENTION`, `WARNING`, `INFO`).
 * **Information Conflict Detection**: Detects discrepancies between intake forms (e.g. Penicillin allergy) and report notes.
 * **Longitudinal Patient Record**: Maintains a chronological timeline and visualizes metric trends across historical reports.
-* **Grounded Ask MedLens**: Patient-scoped, source-grounded question answering with document page citations.
+* **Trust Center & Audit Trail**: Real-time compliance dashboard (`/trust`) and cryptographic audit log (`/audit`) tracking all patient data access and mutations.
 * **Privacy & Security**: AES-256-GCM encryption for patient PII, JWT authentication, and a `DELETE` API for GDPR/HIPAA privacy compliance.
 * **Structured PDF Export**: Generates printable, audit-ready PDF records of structured patient data.
 
@@ -118,24 +120,43 @@ The comparison describes recorded information changes and does not provide medic
 
 ---
 
-## 7. Grounded Ask MedLens
+## 7. Retrieval-Augmented Generation (RAG) — Grounded Ask MedLens
 
-Ask MedLens provides patient-scoped, source-grounded question answering.
+Ask MedLens provides patient-scoped, source-grounded Retrieval-Augmented Generation (RAG) question answering.
 
-The retrieval layer uses information already available in the patient's structured record and source documents.
+```text
+User Question ("What was my latest Hemoglobin result?")
+                        ↓
+            Patient-Scoped Scope Filter
+                        ↓
+     Document & Lab Metric Context Retrieval
+                        ↓
+         Gemini Grounded Reasoning Prompt
+                        ↓
+Response + Citation Attachment ("Hemoglobin: 10.2 g/dL · CBC_September_2026.pdf - Page 1")
+```
 
-Responses include source references such as:
-`CBC_September.pdf — Page 1`
+### Key RAG Features:
+1. **Patient-Scoped Retrieval**: Queries are strictly bounded to the selected patient's verified lab metrics, intake records, and raw PDF text extracts. Cross-patient data leakage is impossible.
+2. **Document & Page Citations**: Every answer includes explicit citations back to the source document name and page number (e.g. `CBC_September_2026.pdf — Page 1`).
+3. **Anti-Hallucination & Evidence Fallback**: The system does not use unrestricted web knowledge. If sufficient evidence is unavailable in the patient record, MedLens explicitly states that the available records do not contain enough information to answer the question.
+4. **Non-Diagnostic Scope**: RAG answers focus on explaining extracted laboratory metrics, reference ranges, and documented observations without offering medical diagnoses or prescribing treatments.
 
-The system does not use unrestricted web knowledge to answer patient record questions.
-
-If sufficient evidence is unavailable, MedLens explicitly states that the available records do not contain enough information to answer the question.
-
-RAG is an assistive retrieval component of MedLens rather than the core identity of the platform.
+RAG is an assistive retrieval component of MedLens designed to navigate complex patient files safely.
 
 ---
 
-## 8. System Architecture
+## 8. Side-by-Side Dual-Pane Document Viewer
+
+MedLens provides an interactive split-screen experience (`components/SideBySideView.tsx`):
+* **Left Pane (Original Document Viewer)**: Displays active report PDF metadata, page selector, extracted text snippet highlight, and raw document text.
+* **Right Pane (Structured Medical Record)**: Organizes lab metrics into clinical panels (e.g., *Complete Blood Count*, *Metabolic Panel*, *Endocrine*) with non-wrapping reference ranges, status badges, verification actions, and inline provenance citations.
+
+Clicking any lab metric in the structured record automatically highlights its corresponding text snippet and page source in the document viewer.
+
+---
+
+## 9. System Architecture
 
 ```text
                     MedLens
@@ -170,12 +191,12 @@ RAG is an assistive retrieval component of MedLens rather than the core identity
                       |
         +-------------+-------------+
         |             |             |
-     Timeline      Audit       Ask MedLens
+     Timeline      Audit       Ask MedLens (RAG)
 ```
 
 ---
 
-## 9. Responsible AI Architecture
+## 10. Responsible AI Architecture
 
 MedLens does not treat the LLM as the source of truth.
 
@@ -211,16 +232,16 @@ MedLens:
 * **Does not present unsupported AI assumptions as medical facts.**
 * **Does not automatically resolve conflicting patient information.**
 * **Does not treat AI extraction as verified clinical information.**
-* **Provides source references for grounded AI responses.**
+* **Provides source references for grounded RAG responses.**
 * **Explicitly communicates when available evidence is insufficient.**
 
 ---
 
-## 10. Security & Privacy
+## 11. Security, Privacy & Compliance
 
 MedLens follows a defense-in-depth approach for sensitive clinical information.
 
-### Data Protection
+### Security Controls
 * **AES-256-GCM Encryption**: Encrypts sensitive patient fields (`nameEncrypted`, `symptomsEncrypted`).
 * **SHA-256 Hashing**: Prevents duplicate document uploads (`409 DUPLICATE_REPORT`).
 * **Password Hashing**: Authenticates users securely with bcrypt.
@@ -229,12 +250,12 @@ MedLens follows a defense-in-depth approach for sensitive clinical information.
 * **Input Validation**: Enforced via Zod schemas.
 * **Privacy Deletion API**: Implements `DELETE /api/patients/[id]` for permanent record purging.
 
-### Data Minimization
-Sensitive information is not unnecessarily exposed in JWT payloads, client-side code, audit logs, or AI prompts.
+### Data Minimization & Trust Center
+Sensitive information is not unnecessarily exposed in JWT payloads, client-side code, audit logs, or AI prompts. The **Trust Center (`/trust`)** and **Audit Trail (`/audit`)** provide transparent compliance visibility.
 
 ---
 
-## 11. Data Provenance
+## 12. Data Provenance & Lineage
 
 MedLens distinguishes information according to its origin:
 
@@ -254,7 +275,7 @@ Each extracted laboratory result retains:
 
 ---
 
-## 12. Technology Stack
+## 13. Technology Stack
 
 | Layer | Technology |
 |:---|:---|
@@ -262,7 +283,7 @@ Each extracted laboratory result retains:
 | **Backend** | Next.js App Router / Server Route Handlers |
 | **Styling** | Tailwind CSS |
 | **Database** | MongoDB (with in-memory fallback) |
-| **AI Engine** | Google Gemini API |
+| **AI / RAG Engine** | Google Gemini API (Grounded RAG) |
 | **Validation** | Zod Schemas |
 | **Authentication** | JWT (`jose`) + HttpOnly Cookies |
 | **Password Security** | bcryptjs |
@@ -272,23 +293,23 @@ Each extracted laboratory result retains:
 
 ---
 
-## 13. Application Modules
+## 14. Application Modules
 
 * `/` — Landing page & product overview
 * `/patients` — Patient directory and intake
 * `/patients/[id]` — Patient workspace overview
-* `/patients/[id]/record` — Structured medical record viewer & PDF export
+* `/patients/[id]/record` — Structured medical record viewer, side-by-side snippet viewer & PDF export
 * `/patients/[id]/upload` — Medical report ingestion & SHA-256 deduplication
 * `/patients/[id]/signals` — Clinical Information Signal engine
 * `/patients/[id]/timeline` — Patient information chronological timeline
 * `/patients/[id]/compare` — Historical report comparison
-* `/patients/[id]/ask` — Source-grounded Ask MedLens
+* `/patients/[id]/ask` — Source-grounded RAG (Ask MedLens)
 * `/trust` — Security & Responsible AI Center
 * `/audit` — Cryptographic system audit trail
 
 ---
 
-## 14. Demonstration Workflow
+## 15. Demonstration Workflow
 
 A complete MedLens workflow can be demonstrated as follows:
 1. Select or create a patient record (**Sarah Jenkins - `MED-8921`**).
@@ -301,16 +322,16 @@ A complete MedLens workflow can be demonstrated as follows:
 8. Evaluate provided reference ranges deterministically (`10.2 g/dL` vs `12.0-15.5 g/dL` -> `BELOW_PROVIDED_RANGE`).
 9. Generate Clinical Information Signals (Outside Range, Pending Verification).
 10. Surface allergy conflicts between intake (`Penicillin`) and report notes (`NKDA`).
-11. Review extracted metrics in the **SideBySide Viewer**.
+11. Review extracted metrics in the **SideBySide Viewer**, clicking any result to view text snippet highlights on page 1.
 12. Click **Verify** or **Edit** to confirm AI extraction accuracy.
 13. View historical trends in **Compare Reports**.
 14. Inspect chronological events in **Timeline**.
-15. Ask a source-grounded question in **Ask MedLens**.
-16. Inspect the audit log in **Audit Trail**.
+15. Ask a source-grounded question in **Ask MedLens (RAG)** and verify page citations.
+16. Inspect the audit log in **Audit Trail** and security compliance in **Trust Center**.
 
 ---
 
-## 15. What Makes MedLens Different?
+## 16. What Makes MedLens Different?
 
 MedLens is not a generic medical chatbot.
 
@@ -335,7 +356,7 @@ When information is missing, conflicting, or uncertain, MedLens exposes that unc
 
 ---
 
-## 16. Limitations
+## 17. Limitations
 
 MedLens is an information organization and review-support system.
 
@@ -350,7 +371,7 @@ AI-generated summaries and extracted information must be reviewed by an appropri
 
 ---
 
-## 17. Running MedLens Locally
+## 18. Running MedLens Locally
 
 ### Requirements
 * Node.js 18.x+
@@ -393,7 +414,7 @@ Open `http://localhost:3000` in your browser.
 
 ---
 
-## 18. Validation & Testing
+## 19. Validation & Testing
 
 MedLens includes automated validation for:
 * TypeScript compilation (`npx tsc --noEmit`)
@@ -411,7 +432,7 @@ npm test
 
 ---
 
-## 19. Future Enhancements
+## 20. Future Enhancements
 
 * OCR engine integration for low-resolution scanned documents.
 * Multi-language laboratory report translation.
