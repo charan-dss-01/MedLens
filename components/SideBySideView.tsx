@@ -127,7 +127,7 @@ export default function SideBySideView({ reports, labResults, onVerifyResult }: 
               </span>
             </div>
             <p className="text-xs font-mono text-slate-800 bg-white p-2.5 rounded border border-medical-100 leading-relaxed font-medium">
-              "{selectedResult.source.textSnippet}"
+              &quot;{selectedResult.source.textSnippet}&quot;
             </p>
           </div>
         )}
