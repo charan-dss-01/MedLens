@@ -5,7 +5,15 @@ const IV_LENGTH = 12; // Standard GCM IV length in bytes
 const AUTH_TAG_LENGTH = 16;
 
 function getEncryptionKey(): Buffer {
-  const hexKey = process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+  const hexKey = process.env.ENCRYPTION_KEY;
+  if (!hexKey) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL SECURITY BOOT ERROR: ENCRYPTION_KEY environment variable is missing.');
+    }
+    // Development default key with explicit warning
+    const devFallbackKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    return Buffer.from(devFallbackKey, 'hex');
+  }
   // Standardize key to 32 bytes (256 bits)
   if (hexKey.length === 64) {
     return Buffer.from(hexKey, 'hex');
@@ -31,7 +39,7 @@ export function encryptSensitiveData(text: string): string {
     return `${iv.toString('hex')}:${authTag}:${encrypted}`;
   } catch (error) {
     console.error('Encryption error:', error);
-    return text; // Fallback for unhandled edge cases
+    return text;
   }
 }
 
@@ -40,10 +48,8 @@ export function encryptSensitiveData(text: string): string {
  */
 export function decryptSensitiveData(encryptedPayload: string): string {
   if (!encryptedPayload) return '';
-  // Check if string is in encrypted format
   const parts = encryptedPayload.split(':');
   if (parts.length !== 3) {
-    // Return original string if not encrypted
     return encryptedPayload;
   }
 
@@ -60,7 +66,7 @@ export function decryptSensitiveData(encryptedPayload: string): string {
     
     return decrypted;
   } catch (error) {
-    console.error('Decryption failed (data may not be encrypted or key mismatch):', error);
+    console.error('Decryption failed:', error);
     return encryptedPayload;
   }
 }

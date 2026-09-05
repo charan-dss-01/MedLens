@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
     const reportId = `rep-${Date.now()}`;
 
     // Create Medical Report Record
+    const isSimulatedFallback = Boolean(extractionResult.isSimulatedFallback);
     const newReport: MedicalReport = {
       id: reportId,
       patientId,
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
       extractedText,
       extractedResultsCount: extractionResult.extractedResults.length,
       status: 'COMPLETED',
+      isSimulatedFallback,
       uploadedAt: new Date().toISOString()
     };
 
@@ -101,12 +103,13 @@ export async function POST(req: NextRequest) {
       referenceRange: res.referenceRange || null,
       status: res.status || 'REFERENCE_RANGE_UNAVAILABLE',
       observation: res.observation || '',
+      isSimulatedFallback: Boolean(res.isSimulatedFallback || isSimulatedFallback),
       source: {
         fileName: file.name,
         pageNumber: res.sourcePage || 1,
         textSnippet: res.sourceSnippet || `${res.testName}: ${res.value} ${res.unit}`
       },
-      confidence: res.confidence || 90,
+      confidence: (res.isSimulatedFallback || isSimulatedFallback) ? Math.min(res.confidence || 70, 75) : (res.confidence || 90),
       verificationStatus: 'PENDING',
       createdAt: new Date().toISOString()
     }));

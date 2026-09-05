@@ -372,7 +372,7 @@ export async function getPatientById(id: string): Promise<Patient | null> {
   const normId = normalizePatientId(id);
   const patients = await getPatients();
   const match = patients.find(p => p.id === normId || p.patientCode === normId || p.id === id);
-  return match || memoryPatients.find(p => p.id === normId) || memoryPatients[0] || null;
+  return match || memoryPatients.find(p => p.id === normId) || null;
 }
 
 export async function createPatient(patientData: Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>): Promise<Patient> {

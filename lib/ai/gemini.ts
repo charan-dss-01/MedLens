@@ -207,21 +207,19 @@ function simulateDemoExtraction(text: string, fileName: string) {
 
   if (extractedResults.length === 0) {
     extractedResults.push(
-      { testName: 'Hemoglobin', category: 'Complete Blood Count (CBC)', value: '12.8', numericValue: 12.8, unit: 'g/dL', referenceRange: '12.0–15.5 g/dL', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'Hemoglobin 12.8 g/dL 12.0–15.5 g/dL', confidence: 96 },
-      { testName: 'WBC Count', category: 'Complete Blood Count (CBC)', value: '7,400', numericValue: 7400, unit: '/μL', referenceRange: '4,000–11,000 /μL', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'WBC Count 7,400 /μL 4,000–11,000 /μL', confidence: 95 },
-      { testName: 'Platelets', category: 'Complete Blood Count (CBC)', value: '245,000', numericValue: 245000, unit: '/μL', referenceRange: '150,000–450,000 /μL', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'Platelets 245,000 /μL 150,000–450,000 /μL', confidence: 95 },
-      { testName: 'RBC Count', category: 'Complete Blood Count (CBC)', value: '4.45', numericValue: 4.45, unit: 'million/μL', referenceRange: '3.8–5.2 million/μL', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'RBC Count 4.45 million/μL 3.8–5.2 million/μL', confidence: 95 },
-      { testName: 'Glucose', category: 'Basic Metabolic Panel (BMP)', value: '94', numericValue: 94, unit: 'mg/dL', referenceRange: '70–99 mg/dL', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'Glucose 94 mg/dL 70–99 mg/dL', confidence: 97 },
-      { testName: 'Creatinine', category: 'Basic Metabolic Panel (BMP)', value: '0.8', numericValue: 0.8, unit: 'mg/dL', referenceRange: '0.6–1.1 mg/dL', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'Creatinine 0.8 mg/dL 0.6–1.1 mg/dL', confidence: 97 },
-      { testName: 'Sodium', category: 'Basic Metabolic Panel (BMP)', value: '139', numericValue: 139, unit: 'mmol/L', referenceRange: '135–145 mmol/L', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'Sodium 139 mmol/L 135–145 mmol/L', confidence: 96 },
-      { testName: 'Potassium', category: 'Basic Metabolic Panel (BMP)', value: '4.2', numericValue: 4.2, unit: 'mmol/L', referenceRange: '3.5–5.1 mmol/L', status: 'WITHIN_PROVIDED_RANGE', observation: 'Within provided reference range.', sourcePage: 1, sourceSnippet: 'Potassium 4.2 mmol/L 3.5–5.1 mmol/L', confidence: 96 }
+      { testName: 'Hemoglobin', category: 'Complete Blood Count (CBC)', value: '12.8', numericValue: 12.8, unit: 'g/dL', referenceRange: '12.0–15.5 g/dL', status: 'WITHIN_PROVIDED_RANGE', observation: '[SIMULATED FALLBACK] Demo lab metric generated due to unparseable document text.', sourcePage: 1, sourceSnippet: 'Hemoglobin 12.8 g/dL 12.0–15.5 g/dL', confidence: 70, isSimulatedFallback: true },
+      { testName: 'WBC Count', category: 'Complete Blood Count (CBC)', value: '7,400', numericValue: 7400, unit: '/μL', referenceRange: '4,000–11,000 /μL', status: 'WITHIN_PROVIDED_RANGE', observation: '[SIMULATED FALLBACK] Demo lab metric generated due to unparseable document text.', sourcePage: 1, sourceSnippet: 'WBC Count 7,400 /μL 4,000–11,000 /μL', confidence: 70, isSimulatedFallback: true },
+      { testName: 'Platelets', category: 'Complete Blood Count (CBC)', value: '245,000', numericValue: 245000, unit: '/μL', referenceRange: '150,000–450,000 /μL', status: 'WITHIN_PROVIDED_RANGE', observation: '[SIMULATED FALLBACK] Demo lab metric generated due to unparseable document text.', sourcePage: 1, sourceSnippet: 'Platelets 245,000 /μL 150,000–450,000 /μL', confidence: 70, isSimulatedFallback: true },
+      { testName: 'Glucose', category: 'Basic Metabolic Panel (BMP)', value: '94', numericValue: 94, unit: 'mg/dL', referenceRange: '70–99 mg/dL', status: 'WITHIN_PROVIDED_RANGE', observation: '[SIMULATED FALLBACK] Demo lab metric generated due to unparseable document text.', sourcePage: 1, sourceSnippet: 'Glucose 94 mg/dL 70–99 mg/dL', confidence: 70, isSimulatedFallback: true },
+      { testName: 'Creatinine', category: 'Basic Metabolic Panel (BMP)', value: '0.8', numericValue: 0.8, unit: 'mg/dL', referenceRange: '0.6–1.1 mg/dL', status: 'WITHIN_PROVIDED_RANGE', observation: '[SIMULATED FALLBACK] Demo lab metric generated due to unparseable document text.', sourcePage: 1, sourceSnippet: 'Creatinine 0.8 mg/dL 0.6–1.1 mg/dL', confidence: 70, isSimulatedFallback: true }
     );
   }
 
   return {
-    extractedResults,
+    isSimulatedFallback: true,
+    extractedResults: extractedResults.map(r => ({ ...r, isSimulatedFallback: true })),
     extractedAllergies: [],
     extractedConditions: [],
-    reportSummary: `Extracted ${extractedResults.length} laboratory test values from ${fileName}.`
+    reportSummary: `[SIMULATED FALLBACK] Extracted ${extractedResults.length} laboratory test values from ${fileName}.`
   };
 }

@@ -14,16 +14,24 @@ export async function getMongoClient(): Promise<MongoClient | null> {
     return client;
   }
 
+  if (process.env.MONGODB_URI) {
+    console.log('[MongoDB] MONGODB_URI configured. Connecting to MongoDB database...');
+  } else {
+    console.warn('[MongoDB] MONGODB_URI environment variable not set. Falling back to local/in-memory store mode.');
+  }
+
   try {
     client = new MongoClient(uri, options);
     await client.connect();
     // Test connectivity
     await client.db().command({ ping: 1 });
     isConnected = true;
+    console.log('[MongoDB] Successfully connected to MongoDB database.');
     return client;
-  } catch {
+  } catch (err: any) {
     isConnected = false;
     client = null;
+    console.warn(`[MongoDB] Could not connect to MongoDB database at ${uri}: ${err?.message || err}. Operating in dual in-memory fallback mode.`);
     return null;
   }
 }

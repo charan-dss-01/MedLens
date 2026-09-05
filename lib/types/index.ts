@@ -75,6 +75,7 @@ export interface LabResult {
   verifiedBy?: string;
   verifiedAt?: string;
   originalAIValue?: string;
+  isSimulatedFallback?: boolean;
   createdAt: string;
 }
 
@@ -88,6 +89,7 @@ export interface MedicalReport {
   extractedText: string;
   extractedResultsCount: number;
   status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  isSimulatedFallback?: boolean;
   uploadedAt: string;
 }
 

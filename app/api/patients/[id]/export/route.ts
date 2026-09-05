@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPatientById, getLabResultsByPatientId, getReportsByPatientId, getSignalsByPatientId } from '@/lib/db/store';
+import { getCurrentUser } from '@/lib/security/auth';
+import { escapeHtml } from '@/lib/security/escapeHtml';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const patientId = params.id;
     const patient = await getPatientById(patientId);
 
     if (!patient) {
       return NextResponse.json({ success: false, error: 'Patient workspace not found' }, { status: 404 });
+    }
+
+    // Server-side ownership check
+    if (patient.userId && patient.userId !== user.id && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden: Access denied to requested patient record' }, { status: 403 });
     }
 
     const labResults = await getLabResultsByPatientId(patient.id);
@@ -17,13 +29,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const verifiedCount = labResults.filter(r => r.verificationStatus === 'VERIFIED' || r.verificationStatus === 'CORRECTED').length;
     const pendingCount = labResults.filter(r => r.verificationStatus === 'PENDING').length;
 
-    // Generate Printable HTML Summary Document
+    // Generate Printable HTML Summary Document with escapeHtml XSS protection
     const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MedLens Patient Clinical Summary - ${patient.name} (${patient.patientCode})</title>
+  <title>MedLens Patient Clinical Summary - ${escapeHtml(patient.name)} (${escapeHtml(patient.patientCode)})</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; color: #1e293b; background: #fff; line-height: 1.5; }
     .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -37,12 +49,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .card-label { text-transform: uppercase; font-size: 10px; font-weight: bold; color: #94a3b8; }
     .card-value { font-size: 14px; font-weight: bold; color: #0f172a; margin-top: 2px; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-    th { background: #f1f5f9; text-align: left; padding: 8px 12px; font-weight: bold; color: #475569; border: 1px solid #cbd5e1; uppercase; }
+    th { background: #f1f5f9; text-align: left; padding: 8px 12px; font-weight: bold; color: #475569; border: 1px solid #cbd5e1; text-transform: uppercase; }
     td { padding: 8px 12px; border: 1px solid #e2e8f0; }
     tr:nth-child(even) { background: #f8fafc; }
     .verified { color: #15803d; font-weight: bold; }
     .pending { color: #b45309; font-weight: bold; }
-    .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; pt: 16px; font-size: 11px; color: #94a3b8; text-align: center; }
+    .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 11px; color: #94a3b8; text-align: center; }
     @media print {
       body { margin: 20px; }
       .no-print { display: none; }
@@ -50,7 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   </style>
 </head>
 <body>
-  <div className="no-print" style="margin-bottom: 20px; text-align: right;">
+  <div class="no-print" style="margin-bottom: 20px; text-align: right;">
     <button onclick="window.print()" style="background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">
       🖨️ Print / Save as PDF
     </button>
@@ -62,7 +74,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       <div class="subtitle">Structured Information & Provenance Audit Report</div>
     </div>
     <div>
-      <span class="badge">${patient.patientCode}</span>
+      <span class="badge">${escapeHtml(patient.patientCode)}</span>
     </div>
   </div>
 
@@ -74,11 +86,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   <div class="grid">
     <div class="card">
       <div class="card-label">Patient Name</div>
-      <div class="card-value">${patient.name}</div>
+      <div class="card-value">${escapeHtml(patient.name)}</div>
     </div>
     <div class="card">
       <div class="card-label">Demographics</div>
-      <div class="card-value">${patient.age} years • ${patient.sex}</div>
+      <div class="card-value">${escapeHtml(String(patient.age))} years • ${escapeHtml(patient.sex)}</div>
     </div>
     <div class="card">
       <div class="card-label">Report Count</div>
@@ -105,14 +117,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     <tbody>
       ${labResults.map(r => `
         <tr>
-          <td>${r.category}</td>
-          <td><strong>${r.testName}</strong></td>
-          <td><strong>${r.value}</strong> ${r.unit}</td>
-          <td>${r.referenceRange || '<em>UNAVAILABLE</em>'}</td>
-          <td><code>${r.source.fileName} (p.${r.source.pageNumber})</code></td>
+          <td>${escapeHtml(r.category)}</td>
+          <td><strong>${escapeHtml(r.testName)}</strong></td>
+          <td><strong>${escapeHtml(r.value)}</strong> ${escapeHtml(r.unit)}</td>
+          <td>${r.referenceRange ? escapeHtml(r.referenceRange) : '<em>UNAVAILABLE</em>'}</td>
+          <td><code>${escapeHtml(r.source.fileName)} (p.${r.source.pageNumber})</code></td>
           <td>
             <span class="${r.verificationStatus === 'VERIFIED' || r.verificationStatus === 'CORRECTED' ? 'verified' : 'pending'}">
-              ${r.verificationStatus}
+              ${escapeHtml(r.verificationStatus)}
             </span>
           </td>
         </tr>
@@ -124,14 +136,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   <ul>
     ${signals.map(s => `
       <li style="margin-bottom: 8px; font-size: 12px;">
-        <strong>[${s.severity.toUpperCase()}] ${s.title}:</strong> ${s.description}
-        <br><span style="color: #64748b; font-size: 11px;">Source: ${s.sourceDocument || 'Uploaded PDF Report'}</span>
+        <strong>[${escapeHtml(s.severity.toUpperCase())}] ${escapeHtml(s.title)}:</strong> ${escapeHtml(s.description)}
+        <br><span style="color: #64748b; font-size: 11px;">Source: ${escapeHtml(s.sourceDocument || 'Uploaded PDF Report')}</span>
       </li>
     `).join('')}
   </ul>
 
   <div class="footer">
-    MedLens Platform • AES-256 Encrypted • Source Grounded • Generated ${new Date().toLocaleString()}
+    MedLens Platform • AES-256 Encrypted • Source Grounded • Generated ${escapeHtml(new Date().toLocaleString())}
   </div>
 </body>
 </html>

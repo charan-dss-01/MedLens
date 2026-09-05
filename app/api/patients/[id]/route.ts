@@ -7,14 +7,25 @@ import {
   getConflictsByPatientId, 
   getTimelineByPatientId 
 } from '@/lib/db/store';
+import { getCurrentUser } from '@/lib/security/auth';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const patientId = params.id;
     const patient = await getPatientById(patientId);
     
     if (!patient) {
       return NextResponse.json({ success: false, error: 'Patient not found' }, { status: 404 });
+    }
+
+    // Ownership check
+    if (patient.userId && patient.userId !== user.id && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden: Access denied to requested patient record' }, { status: 403 });
     }
 
     const labResults = await getLabResultsByPatientId(patient.id);
@@ -41,7 +52,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const patientId = params.id;
+    const patient = await getPatientById(patientId);
+
+    if (patient && patient.userId && patient.userId !== user.id && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden: Access denied to delete patient record' }, { status: 403 });
+    }
+
     const { deletePatientRecord } = await import('@/lib/db/store');
     await deletePatientRecord(patientId);
     return NextResponse.json({
