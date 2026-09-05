@@ -1,439 +1,842 @@
 # MedLens — AI-Powered Clinical Information Intelligence
 
-> **Transforming Fragmented Medical Records into a Structured, Traceable, and Reviewable Patient Intelligence Layer.**
+> **Transforming Fragmented Medical Information into a Structured, Source-Traceable, Reviewable, and Human-Verified Patient Information Record.**
+
+MedLens is an AI-powered clinical information intelligence platform designed to address a practical problem: medical information is often fragmented across patient history, laboratory reports, medical documents, medication information, and previous records.
+
+Instead of treating an LLM response as the source of truth, MedLens uses AI inside a controlled processing pipeline:
+
+```text
+Medical Information
+        ↓
+Secure Processing
+        ↓
+AI-Assisted Extraction
+        ↓
+Schema Validation
+        ↓
+Deterministic Validation
+        ↓
+Provenance & Evidence
+        ↓
+Information Signals
+        ↓
+Human Verification
+        ↓
+Structured Patient Record
+```
+
+### Core Principle
+> **AI assists. The system validates. The source remains authoritative. Humans remain in control.**
+
+MedLens is intentionally designed as an information intelligence and review system, not as an autonomous diagnostic or treatment system.
 
 ---
 
-## 1. Problem & Vision
+## 1. The Problem
 
-### Problem
-Patient health information is routinely fragmented across handwritten intake notes, laboratory PDF reports, previous diagnostic records, and prescriptions. When reviewing patient history:
-* Clinicians waste critical time searching through raw, unstructured PDFs.
-* Key laboratory metric trends and out-of-range indicators get missed.
-* Critical allergy conflicts between intake forms and past laboratory notes go undetected.
-* Standard generic LLM summaries risk hallucinations, invented laboratory reference ranges, and dangerous diagnostic assumptions.
+Medical information is frequently distributed across:
+* Patient intake information
+* Symptoms and medical history
+* Allergies
+* Medications
+* Laboratory reports
+* Medical PDFs
+* Medicine/document images
+* Previous records
+* Clinical notes
 
-### Vision
-**MedLens** is an AI-assisted clinical information intelligence platform designed to improve the organization, traceability, and understandability of patient-provided medical information. 
+Traditional document-to-chat interfaces can make information easier to read, but they introduce important problems:
+* AI-generated information may lose source context.
+* LLMs can produce unsupported assumptions.
+* Reference ranges may be incorrectly inferred.
+* Important contradictions may be overlooked.
+* Users may not know whether information was extracted, generated, or verified.
+* Historical changes can be difficult to identify.
+* A free-form summary is difficult to audit.
 
-MedLens does **not** replace medical professionals, nor does it diagnose diseases. Instead, it equips clinicians and patients with deterministic reference-range validation, page-level document provenance, human verification workflows, grounded RAG question answering, and responsible AI summaries.
-
----
-
-## 2. Core Capabilities
-
-* **Patient Information Intake**: Securely captures patient demographics, active symptoms, known allergies, current medications, existing conditions, and medical history with `USER_INPUT` provenance attribution.
-* **Medical Report Ingestion & Deduplication**: Parses laboratory PDF reports, extracts raw text, and computes SHA-256 cryptographic hashes to prevent duplicate report ingestion.
-* **Structured Medical Record**: Organizes extracted information into clear, segregated clinical panels rather than raw AI text.
-* **Reference-Range Awareness**: Identifies whether reported values are low, normal, or high using reference ranges provided in the source report. Never invents reference ranges.
-* **Source & Provenance**: Clearly distinguishes between user-provided information, PDF-extracted data, AI summaries, and human-verified records.
-* **Retrieval-Augmented Generation (RAG)**: Patient-scoped, source-grounded question answering (Ask MedLens) with strict document page citations and anti-hallucination safeguards.
-* **Side-by-Side Dual-Pane Viewer**: Interactive viewer matching extracted clinical metrics on the right with original PDF page highlights and text snippets on the left.
-* **Human-in-the-Loop Verification**: Enables clinicians to `VERIFY`, `EDIT`, or `REJECT` extracted lab results before finalizing structured records.
-* **Clinical Information Signal Engine**: Converts out-of-range metrics, pending verifications, and discrepancies into structured signals (`ATTENTION`, `WARNING`, `INFO`).
-* **Information Conflict Detection**: Detects discrepancies between intake forms (e.g. Penicillin allergy) and report notes.
-* **Longitudinal Patient Record**: Maintains a chronological timeline and visualizes metric trends across historical reports.
-* **Trust Center & Audit Trail**: Real-time compliance dashboard (`/trust`) and cryptographic audit log (`/audit`) tracking all patient data access and mutations.
-* **Privacy & Security**: AES-256-GCM encryption for patient PII, JWT authentication, and a `DELETE` API for GDPR/HIPAA privacy compliance.
-* **Structured PDF Export**: Generates printable, audit-ready PDF records of structured patient data.
+MedLens addresses this by creating a structured information layer between raw medical sources and AI-generated understanding.
 
 ---
 
-## 3. Human-in-the-Loop Verification
+## 2. What Makes MedLens Different?
 
-Every AI-extracted clinical data point is assigned a verification state:
-* `PENDING`
-* `VERIFIED`
-* `CORRECTED`
-* `REJECTED`
+MedLens is not simply:
+`Upload a PDF → Ask an AI → Get a summary.`
 
-Clinicians can review extracted values before relying on them.
+Instead, MedLens treats AI as one component inside a controlled information-processing architecture.
 
-When a value is corrected, MedLens preserves the original AI-extracted value (`originalAIValue`) and records the correction, reviewer, timestamp, and audit event.
+### Traditional AI Workflow
+```text
+Document → LLM → Answer
+```
 
-AI extraction is therefore treated as an assistive process rather than an unquestioned source of truth.
+### MedLens Workflow
+```text
+Document
+   ↓
+Extraction
+   ↓
+AI Structured Interpretation
+   ↓
+Schema Validation
+   ↓
+Deterministic Checks
+   ↓
+Provenance
+   ↓
+Signals / Conflicts
+   ↓
+Human Review
+   ↓
+Structured Record
+   ↓
+Grounded AI Interaction
+```
+
+This architecture is designed around source-of-truth preservation, provenance, uncertainty handling, and human oversight.
 
 ---
 
-## 4. Clinical Information Signal Engine
+## 3. Core Capabilities: Patient Information Intake
 
-MedLens converts changes, conflicts, and review requirements into structured Clinical Information Signals.
+MedLens supports structured patient information including:
+* Demographics (Name, Age, Sex)
+* Symptoms
+* Existing conditions
+* Allergies
+* Medications
+* Relevant medical history
 
-Signals include:
+User-entered information is represented separately from information extracted from documents (`USER_INPUT`).
+
+**Primary Implementation Areas**:
+* `app/api/patients/`
+* `lib/db/`
+
+---
+
+## 4. Medical Document & Image Intelligence
+
+MedLens processes supported medical documents and images to extract structured information.
+
+### Processing Workflow
+```text
+Upload
+ ↓
+Validation
+ ↓
+Integrity / Hash Processing (SHA-256)
+ ↓
+Document or Image Processing
+ ↓
+AI-Assisted Extraction (Gemini 1.5)
+ ↓
+Schema Validation (Zod)
+ ↓
+Domain Validation
+ ↓
+Structured Record
+```
+
+Extracted information can include:
+* Test names
+* Values
+* Units
+* Reference ranges
+* Report dates
+* Observations
+* Source information
+
+**Relevant Implementation Areas**:
+* `app/api/reports/upload/`
+* `lib/ai/`
+* `lib/utils/`
+
+---
+
+## 5. Structured Medical Record
+
+AI output is not stored as an unrestricted block of generated prose.
+
+MedLens converts extracted information into structured application data organized into clinical categories:
+* Complete Blood Count (CBC)
+* Metabolic information
+* Endocrine information
+* General Diagnostic Panels
+
+This allows the application to perform deterministic operations such as:
+* Range comparison
+* Historical comparison
+* Conflict detection
+* Verification tracking
+* Provenance display
+
+---
+
+## 6. Reference-Range Integrity
+
+One of the core safety principles of MedLens is:
+> **Never invent a laboratory reference range.**
+
+When a report provides a reference range, MedLens uses the range contained in that source. The system classifies a result using the source-provided range:
+* `WITHIN_PROVIDED_RANGE`
+* `ABOVE_PROVIDED_RANGE`
+* `BELOW_PROVIDED_RANGE`
+
+If the source does not provide a usable reference range, MedLens preserves that uncertainty rather than substituting an assumed range:
+
+```text
+Source contains range → Use source range
+Source does not contain range → REFERENCE_RANGE_UNAVAILABLE
+```
+
+The system does not use an LLM's general medical knowledge as a replacement for missing source evidence.
+
+---
+
+## 7. Provenance & Data Lineage
+
+Provenance is a first-class concept in MedLens. Information is distinguished according to its origin:
+* `USER_INPUT`
+* `DOCUMENT_EXTRACTED`
+* `AI_GENERATED`
+* `HUMAN_VERIFIED`
+
+Where available, provenance includes:
+* Source document file name and SHA-256 hash
+* Page number
+* Source text snippet
+* Extraction confidence score
+* Timestamp & Verification status
+
+**Intended Information Flow**:
+```text
+Structured Value → Provenance → Source Document → Page / Evidence
+```
+
+This makes the structured record reviewable rather than opaque.
+
+---
+
+## 8. Human-in-the-Loop Verification
+
+AI extraction is treated as reviewable information rather than unquestionable truth. Extracted information moves through states:
+
+```text
+PENDING → VERIFIED
+PENDING → CORRECTED → VERIFIED
+PENDING → REJECTED
+```
+
+When supported by the workflow, human corrections preserve the original AI-generated value (`originalAIValue`) and create an audit trail event rather than silently replacing historical information.
+
+Principle: **AI proposes. Humans verify.**
+
+---
+
+## 9. Clinical Information Signal Engine
+
+MedLens converts information-management conditions into structured signals:
 * `OUTSIDE_RANGE`
 * `VERIFICATION_REQUIRED`
 * `CONFLICT_DETECTED`
 * `CHANGE_DETECTED`
-* `MISSING_INFO`
+* `MISSING_INFORMATION`
+* `DUPLICATE_DOCUMENT`
+* `LOW_CONFIDENCE_EXTRACTION`
+* `REFERENCE_RANGE_UNAVAILABLE`
 
-Signals are categorized as:
-* **ATTENTION** — information requires review
-* **WARNING** — verification or conflict detected
-* **INFO** — information change detected
+These signals are intentionally different from medical diagnoses. For example, `OUTSIDE_RANGE` means a recorded value is outside the reference range provided by the source report. It does **not** mean that MedLens has diagnosed a disease.
 
-Signals do not represent diagnoses or medical risk scores.
-
-For example, if a laboratory report provides a reference range of 4.5–11.0 and the extracted WBC value is 11.8, MedLens flags the value as `ABOVE_PROVIDED_RANGE`.
-
-The system does not determine whether the result represents a disease or medical emergency.
+This separation between **Information Signal** and **Clinical Diagnosis** is a deliberate responsible-AI boundary.
 
 ---
 
-## 5. Information Conflict Detection
+## 10. Conflict Detection
 
-MedLens identifies conflicting information across different sources.
+Medical records may contain inconsistent information. MedLens identifies conflicts such as:
+* Conflicting allergy information (e.g. intake Penicillin allergy vs. report NKDA)
+* Medication discrepancies
+* Conflicting demographic information
+* Conflicting historical values
+* Inconsistent dates or duplicate records
 
-Examples include:
-* Patient intake vs. medical report
-* Current medication list vs. historical record
-* Allergy information across reports
-* Different values for the same clinical measurement
+The system exposes the disagreement rather than silently selecting one value when evidence is ambiguous.
 
-Conflicts are surfaced for human review rather than automatically deciding which source is medically correct.
-
-Each conflict preserves:
-* Field
-* Value A & Source A
-* Value B & Source B
-* Resolution status
-* Timestamp
+Principle: **Transparency over false certainty.**
 
 ---
 
-## 6. Longitudinal Patient Record
+## 11. Longitudinal Information Comparison
 
-MedLens maintains a chronological information timeline containing:
-* Patient creation
-* Report uploads
-* AI extraction
-* Verification & Corrections
-* Conflict detection
-* Summary generation
-
-Historical reports can be compared to identify:
-* Changed values
-* Unchanged values
-* Newly available measurements
-* Missing measurements
-
-The comparison describes recorded information changes and does not provide medical interpretation.
-
----
-
-## 7. Retrieval-Augmented Generation (RAG) — Grounded Ask MedLens
-
-Ask MedLens provides patient-scoped, source-grounded Retrieval-Augmented Generation (RAG) question answering.
+Medical information becomes more useful when historical records can be compared:
+* Previous vs. current values
+* Historical report dates
+* Changed measurements
+* Newly available vs. missing information
+* Historical verification status
 
 ```text
-User Question ("What was my latest Hemoglobin result?")
-                        ↓
-            Patient-Scoped Scope Filter
-                        ↓
-     Document & Lab Metric Context Retrieval
-                        ↓
-         Gemini Grounded Reasoning Prompt
-                        ↓
-Response + Citation Attachment ("Hemoglobin: 10.2 g/dL · CBC_September_2026.pdf - Page 1")
+Previous Report (Hemoglobin: X) ──> Current Report (Hemoglobin: Y) ──> CHANGE_DETECTED
 ```
 
-### Key RAG Features:
-1. **Patient-Scoped Retrieval**: Queries are strictly bounded to the selected patient's verified lab metrics, intake records, and raw PDF text extracts. Cross-patient data leakage is impossible.
-2. **Document & Page Citations**: Every answer includes explicit citations back to the source document name and page number (e.g. `CBC_September_2026.pdf — Page 1`).
-3. **Anti-Hallucination & Evidence Fallback**: The system does not use unrestricted web knowledge. If sufficient evidence is unavailable in the patient record, MedLens explicitly states that the available records do not contain enough information to answer the question.
-4. **Non-Diagnostic Scope**: RAG answers focus on explaining extracted laboratory metrics, reference ranges, and documented observations without offering medical diagnoses or prescribing treatments.
-
-RAG is an assistive retrieval component of MedLens designed to navigate complex patient files safely.
+The system reports the recorded change rather than automatically interpreting it as disease progression or improvement.
 
 ---
 
-## 8. Side-by-Side Dual-Pane Document Viewer
+## 12. Grounded Ask MedLens
 
-MedLens provides an interactive split-screen experience (`components/SideBySideView.tsx`):
-* **Left Pane (Original Document Viewer)**: Displays active report PDF metadata, page selector, extracted text snippet highlight, and raw document text.
-* **Right Pane (Structured Medical Record)**: Organizes lab metrics into clinical panels (e.g., *Complete Blood Count*, *Metabolic Panel*, *Endocrine*) with non-wrapping reference ranges, status badges, verification actions, and inline provenance citations.
-
-Clicking any lab metric in the structured record automatically highlights its corresponding text snippet and page source in the document viewer.
-
----
-
-## 9. System Architecture
+Ask MedLens provides patient-scoped AI interaction over available records:
 
 ```text
-                    MedLens
-                       |
-        +--------------+--------------+
-        |                             |
- Patient Information             Medical Reports
-        |                             |
-        |                         PDF Upload
-        |                             |
-        |                       SHA-256 Hash
-        |                             |
-        |                       Text Extraction
-        |                             |
-        |                           Gemini
-        |                             |
-        |                       Zod Validation
-        |                             |
-        +-------------+---------------+
-                      |
-              Structured Record
-                      |
-        +-------------+-------------+
-        |             |             |
-   Provenance      Signals      Conflicts
-        |             |             |
-        +-------------+-------------+
-                      |
-              Human Verification
-                      |
-              MongoDB Persistence
-                      |
-        +-------------+-------------+
-        |             |             |
-     Timeline      Audit       Ask MedLens (RAG)
+User Question
+      ↓
+Selected Patient Context
+      ↓
+Relevant Structured Information
+      ↓
+Relevant Source Evidence
+      ↓
+Grounded AI Generation
+      ↓
+Source References (e.g. CBC_September.pdf — Page 1)
+      ↓
+Answer
 ```
 
+The system is designed to avoid using unrelated external medical knowledge as a substitute for patient-specific evidence. When available records are insufficient, the assistant communicates uncertainty rather than fabricating an answer.
+
 ---
 
-## 10. Responsible AI Architecture
+## 13. AI Architecture
 
-MedLens does not treat the LLM as the source of truth.
-
-AI-generated output passes through multiple validation layers before becoming part of the structured patient record:
+The AI layer is intentionally constrained:
 
 ```text
-Untrusted Medical Document
-          ↓
-Server-Side Text Extraction
-          ↓
-Gemini Structured Extraction
-          ↓
+Input
+ ↓
+Prompt / AI Processing
+ ↓
+Structured Output
+ ↓
+Parser
+ ↓
 Zod Schema Validation
-          ↓
-Application Validation
-          ↓
-Deterministic Reference-Range Evaluation
-          ↓
-Provenance Assignment
-          ↓
-MongoDB Persistence
-          ↓
-Human Verification
+ ↓
+Domain Validation
+ ↓
+Provenance
+ ↓
+Application State
 ```
 
-### AI Safety Rules
-
-MedLens:
-* **Does not diagnose diseases.**
-* **Does not prescribe treatments.**
-* **Does not recommend medication dosage changes.**
-* **Does not invent laboratory reference ranges.**
-* **Does not present unsupported AI assumptions as medical facts.**
-* **Does not automatically resolve conflicting patient information.**
-* **Does not treat AI extraction as verified clinical information.**
-* **Provides source references for grounded RAG responses.**
-* **Explicitly communicates when available evidence is insufficient.**
+The raw LLM response does not directly become trusted medical application state. This creates a trust boundary between **Probabilistic AI output** and **Deterministic application state**.
 
 ---
 
-## 11. Security, Privacy & Compliance
+## 14. Prompt Engineering
 
-MedLens follows a defense-in-depth approach for sensitive clinical information.
+Prompt design is treated as an engineering component built around:
+* Explicit task definitions
+* Structured JSON output requirements
+* Source-grounding requirements
+* Missing-information behavior
+* Uncertainty handling & Medical safety constraints
+* Prohibited inference & Document-content isolation
 
-### Security Controls
-* **AES-256-GCM Encryption**: Encrypts sensitive patient fields (`nameEncrypted`, `symptomsEncrypted`).
-* **SHA-256 Hashing**: Prevents duplicate document uploads (`409 DUPLICATE_REPORT`).
-* **Password Hashing**: Authenticates users securely with bcrypt.
-* **HttpOnly Authentication Cookies**: Validated via server-side JWT handlers.
-* **Server-Side Authorization**: Protected route handlers.
-* **Input Validation**: Enforced via Zod schemas.
-* **Privacy Deletion API**: Implements `DELETE /api/patients/[id]` for permanent record purging.
-
-### Data Minimization & Trust Center
-Sensitive information is not unnecessarily exposed in JWT payloads, client-side code, audit logs, or AI prompts. The **Trust Center (`/trust`)** and **Audit Trail (`/audit`)** provide transparent compliance visibility.
+Additional prompt architecture documentation: `docs/PROMPT_ENGINEERING.md`
 
 ---
 
-## 12. Data Provenance & Lineage
+## 15. Prompt Injection Defense
 
-MedLens distinguishes information according to its origin:
+Uploaded documents are treated as **untrusted content**. A document may contain text such as *"Ignore previous instructions"*. That text must remain document content rather than an application instruction:
 
-| Provenance | Meaning |
-|:---|:---|
-| `USER_INPUT` | Entered by the patient/clinician during intake |
-| `DOCUMENT_EXTRACTED` | Extracted from an uploaded medical report |
-| `AI_GENERATED` | Generated by an AI process grounded in extracted facts |
-| `HUMAN_VERIFIED` | Reviewed and confirmed by an authorized human |
+```text
+System Instructions
+        ↓
+Application Rules
+        ↓
+User Input
+        ↓
+Retrieved Evidence
+        ↓
+Document Content (Isolated)
+```
 
-Each extracted laboratory result retains:
-* Source document & Page number
-* Extracted text snippet
-* Extraction confidence score
-* Original AI value
-* Verification status, Reviewer & Timestamp
+Document content cannot override application-level safety rules. Adversarial tests (`tests/adversarial-safety.test.ts`) cover this boundary.
 
 ---
 
-## 13. Technology Stack
+## 16. Security Architecture & Patient-Scoped Authorization
+
+Security is implemented as a server-enforced boundary:
+* Authentication & JWT cookie validation
+* Server-side authorization checks on all patient resources
+* Password hashing using bcrypt
+* Input validation via Zod schemas
+* Cryptographic file hashing (SHA-256) & AES-256-GCM PII encryption
+
+### Patient-Scoped Authorization Flow
+```text
+Authenticated User + Requested Resource ──> Authorization Check ──> Allow / Deny
+```
+Prevents unauthorized cross-patient data access (IDOR protection).
+
+---
+
+## 17. Cryptographic Controls
+
+MedLens uses distinct cryptographic mechanisms:
+* **AES-256-GCM**: Used for protecting sensitive persisted patient information (`Confidentiality`).
+* **SHA-256**: Used for document integrity and duplicate upload detection (`Integrity / Identity`).
+
+Encryption and hashing serve different purposes and are not treated as interchangeable.
+
+---
+
+## 18. Privacy
+
+MedLens follows a **Privacy by Design** architecture:
+* Minimize sensitive data exposure in client code, logs, and JWTs.
+* Server-side secret management.
+* Patient-scoped authorization boundaries.
+* Dedicated deletion workflows (`DELETE /api/patients/[id]`).
+* Minimize payload sent to external AI processing.
+
+---
+
+## 19. Responsible AI Boundaries
+
+MedLens intentionally does **not** position the AI as an autonomous clinical decision-maker. The application does **not**:
+* Diagnose diseases
+* Prescribe treatment
+* Recommend medication dosage changes
+* Automatically change medications
+* Invent laboratory reference ranges
+* Resolve ambiguous conflicts without review
+* Present uncertain information as established fact
+
+The system is intended to: organize information, extract structured data, preserve evidence, identify review conditions, compare records, and provide source-grounded explanations.
+
+---
+
+## 20. Security & AI Trust Boundary
+
+```text
+             UNTRUSTED
+                ↓
+      User / Document / AI
+                ↓
+       Validation Boundary
+                ↓
+          Trusted State
+                ↓
+        Human Verification
+```
+
+Neither uploaded content nor raw model output automatically becomes trusted application state.
+
+---
+
+## 21. Testing Strategy
+
+Testing focuses on both normal workflows and failure conditions. Executed and measured test suites (`npm test`):
+
+### Test Measured Results
+* **5 Test Suites** (`api.test.ts`, `components.test.tsx`, `utils.test.ts`, `medical-record.test.ts`, `adversarial-safety.test.ts`)
+* **30 Total Passing Tests** (0 Failures, Exit Code 0)
+
+### Coverage Areas
+1. **API**: Gemini API mocks, 429 rate limiting, 500 timeouts, network failures.
+2. **Components**: Status badges, verification indicators, provenance citations, WCAG ARIA attributes.
+3. **Utilities**: SHA-256 hashing, AES-256 encryption, LRU cache, Canvas image compression, input debouncing.
+4. **Medical Record Logic**: Zod schema extraction, range handling, document processing.
+5. **Adversarial Safety**: Prompt injection resilience, missing range handling, audit preservation.
+
+---
+
+## 22. Accessibility
+
+Accessibility is part of the application architecture:
+* Semantic HTML5 elements
+* Keyboard-accessible controls (`tabIndex={0}`, `onKeyDown` handlers)
+* Visible focus indicators (`focus-visible:ring-2 focus-visible:ring-blue-600`)
+* ARIA semantic attributes (`role="tablist"`, `role="table"`, `scope="col"`, `aria-live="polite"`)
+* Non-color-only status indicators (`Within Range`, `Above Range`, `Below Range` text badges alongside colors)
+
+---
+
+## 23. Performance & Efficiency
+
+Optimization focuses on eliminating redundant computation:
+* Canvas image payload compression (`lib/utils/imageCompressor.ts`)
+* Client-side LRU session caching (`lib/utils/cache.ts`)
+* Debounced input interactions (`lib/utils/debounce.ts`)
+* Lazy loading and code splitting
+
+### Golden Rule:
+> **Do not use an LLM when deterministic computation is sufficient.**
+
+* Hashing → **Deterministic**
+* Duplicate detection → **Deterministic**
+* Schema validation → **Deterministic**
+* Range comparison → **Deterministic**
+* Authorization → **Deterministic**
+* Semantic extraction → **AI-assisted**
+
+---
+
+## 24. Architecture Overview
+
+```mermaid
+flowchart TD
+
+    User[User]
+
+    subgraph Presentation["Presentation Layer"]
+        UI[Next.js Dashboard]
+        PatientUI[Patient Workspace]
+        ReviewUI[Verification & Review]
+        AskUI[Ask MedLens]
+    end
+
+    subgraph Application["Application Layer"]
+        PatientAPI[Patient APIs]
+        UploadAPI[Report Upload API]
+        VerifyAPI[Verification API]
+        AskAPI[Ask API]
+    end
+
+    subgraph Intelligence["AI & Domain Intelligence"]
+        PDF[Document Processing]
+        Gemini[Gemini AI]
+        Schema[Zod Validation]
+        Signals[Signal & Conflict Engine]
+        Provenance[Provenance]
+    end
+
+    subgraph Persistence["Persistence & Security"]
+        Auth[Authentication / Authorization]
+        Store[Database / Store]
+        Crypto[Cryptographic Controls]
+        Audit[Audit History]
+    end
+
+    User --> UI
+
+    UI --> PatientAPI
+    UI --> UploadAPI
+    UI --> VerifyAPI
+    UI --> AskAPI
+
+    UploadAPI --> PDF
+    PDF --> Gemini
+    Gemini --> Schema
+    Schema --> Signals
+    Signals --> Provenance
+    Provenance --> Store
+
+    VerifyAPI --> Store
+    AskAPI --> Provenance
+    AskAPI --> Store
+
+    PatientAPI --> Auth
+    UploadAPI --> Auth
+    VerifyAPI --> Auth
+    AskAPI --> Auth
+
+    Store --> Crypto
+    Store --> Audit
+```
+
+---
+
+## 25. Repository Structure
+
+```text
+app/
+├── api/
+│   ├── ask/
+│   ├── patients/
+│   ├── reports/
+│   └── verification/
+│
+├── (dashboard)/
+│   └── patients/
+│       └── [id]/
+│
+components/
+├── SideBySideView.tsx
+├── ProvenanceBadge.tsx
+├── StatusBadge.tsx
+├── PatientSubNav.tsx
+└── Sidebar.tsx
+
+lib/
+├── ai/
+│   └── gemini.ts
+├── db/
+│   └── store.ts
+├── security/
+│   ├── crypto.ts
+│   └── hash.ts
+├── utils/
+│   ├── cache.ts
+│   ├── debounce.ts
+│   └── imageCompressor.ts
+└── validation/
+    └── schemas.ts
+
+tests/
+├── api.test.ts
+├── components.test.tsx
+├── utils.test.ts
+├── medical-record.test.ts
+└── adversarial-safety.test.ts
+
+docs/
+├── ADR.md
+└── PROMPT_ENGINEERING.md
+```
+
+---
+
+## 26. Architectural Decision Records
+
+Important architectural decisions are documented in `docs/ADR.md`:
+* **ADR 001**: Schema-Constrained Extraction over Free-Form Summarization
+* **ADR 002**: Source Reference Ranges as Sole Benchmark
+* **ADR 003**: First-Class Document Provenance
+* **ADR 004**: Human-in-the-Loop Verification & Audit Preservation
+* **ADR 005**: Prompt Injection Defense & Context Isolation
+* **ADR 006**: Patient-Scoped Grounded RAG
+
+---
+
+## 27. Technology Stack
 
 | Layer | Technology |
 |:---|:---|
-| **Frontend** | Next.js 14 + React 18 + TypeScript |
-| **Backend** | Next.js App Router / Server Route Handlers |
+| **Frontend** | Next.js 14 App Router |
+| **UI** | React 18 |
+| **Language** | TypeScript |
 | **Styling** | Tailwind CSS |
 | **Database** | MongoDB (with in-memory fallback) |
-| **AI / RAG Engine** | Google Gemini API (Grounded RAG) |
-| **Validation** | Zod Schemas |
-| **Authentication** | JWT (`jose`) + HttpOnly Cookies |
+| **AI Engine** | Google Gemini 1.5 |
+| **Validation** | Zod |
+| **Authentication** | JWT (`jose`) / HttpOnly Cookies |
 | **Password Security** | bcryptjs |
-| **Cryptography** | AES-256-GCM |
-| **File Integrity** | SHA-256 |
+| **Cryptography** | AES-256-GCM / SHA-256 |
+| **Testing** | Vitest / React Testing Library / happy-dom |
+| **Document Processing** | pdf-parse / Canvas compression |
 | **Icons** | Lucide React |
 
 ---
 
-## 14. Application Modules
+## 28. Local Development
 
-* `/` — Landing page & product overview
-* `/patients` — Patient directory and intake
-* `/patients/[id]` — Patient workspace overview
-* `/patients/[id]/record` — Structured medical record viewer, side-by-side snippet viewer & PDF export
-* `/patients/[id]/upload` — Medical report ingestion & SHA-256 deduplication
-* `/patients/[id]/signals` — Clinical Information Signal engine
-* `/patients/[id]/timeline` — Patient information chronological timeline
-* `/patients/[id]/compare` — Historical report comparison
-* `/patients/[id]/ask` — Source-grounded RAG (Ask MedLens)
-* `/trust` — Security & Responsible AI Center
-* `/audit` — Cryptographic system audit trail
-
----
-
-## 15. Demonstration Workflow
-
-A complete MedLens workflow can be demonstrated as follows:
-1. Select or create a patient record (**Sarah Jenkins - `MED-8921`**).
-2. Review patient-provided intake information.
-3. Upload a laboratory PDF report (`CBC_September_2026.pdf`).
-4. Calculate the document SHA-256 hash to verify deduplication.
-5. Extract document text and process via Gemini API.
-6. Validate Gemini output against Zod schema (`GeminiExtractionResponseSchema`).
-7. Store extracted laboratory information with page citations.
-8. Evaluate provided reference ranges deterministically (`10.2 g/dL` vs `12.0-15.5 g/dL` -> `BELOW_PROVIDED_RANGE`).
-9. Generate Clinical Information Signals (Outside Range, Pending Verification).
-10. Surface allergy conflicts between intake (`Penicillin`) and report notes (`NKDA`).
-11. Review extracted metrics in the **SideBySide Viewer**, clicking any result to view text snippet highlights on page 1.
-12. Click **Verify** or **Edit** to confirm AI extraction accuracy.
-13. View historical trends in **Compare Reports**.
-14. Inspect chronological events in **Timeline**.
-15. Ask a source-grounded question in **Ask MedLens (RAG)** and verify page citations.
-16. Inspect the audit log in **Audit Trail** and security compliance in **Trust Center**.
-
----
-
-## 16. What Makes MedLens Different?
-
-MedLens is not a generic medical chatbot.
-
-Instead of sending an entire medical record to an LLM and asking it to produce an unrestricted medical interpretation, MedLens creates a structured information layer between source documents and AI.
-
-The platform follows five core principles:
-
-### Evidence Before Interpretation
-Information is first extracted and structured before AI summarization.
-
-### Source Before Assumption
-Every extracted value maintains a connection to its source.
-
-### Deterministic Validation
-Rules such as reference-range comparison are handled by application logic rather than model interpretation.
-
-### Human Before Clinical Reliance
-AI-extracted information remains reviewable and verifiable.
-
-### Transparency Over False Certainty
-When information is missing, conflicting, or uncertain, MedLens exposes that uncertainty instead of inventing an answer.
-
----
-
-## 17. Limitations
-
-MedLens is an information organization and review-support system.
-
-It is not:
-* A diagnostic system
-* A treatment recommendation system
-* A prescription system
-* A replacement for a clinician
-* A medical emergency assessment system
-
-AI-generated summaries and extracted information must be reviewed by an appropriately qualified human before being used for clinical decision-making.
-
----
-
-## 18. Running MedLens Locally
-
-### Requirements
+### Prerequisites
 * Node.js 18.x+
-* MongoDB
+* npm
+* MongoDB (optional; fallback memory store active)
 * Google Gemini API Key
 
 ### Installation
-
 ```bash
-# Clone repository
-git clone https://github.com/medlens/medlens.git
-cd medlens
-
-# Install dependencies
 npm install
 ```
 
-### Environment Variables
-Create `.env.local` in root:
-```env
-GEMINI_API_KEY=your_gemini_api_key
-MONGODB_URI=mongodb://localhost:27017/medlens
-JWT_SECRET=your_jwt_secret_key
-ENCRYPTION_KEY=your_32_byte_hex_encryption_key
+### Development
+```bash
+npm run dev
 ```
 
-### Execution
+### Testing & Verification
 ```bash
-# Start development server
-npm run dev
-
-# Run automated tests
+# Run Vitest test suite (30 passing tests)
 npm test
 
-# Build production app
+# Generate coverage report
+npm run test:coverage
+
+# Run TypeScript compilation check
+npx tsc --noEmit
+
+# Production build
 npm run build
 ```
 
-Open `http://localhost:3000` in your browser.
+---
+
+## 29. Environment Configuration
+
+Create `.env.local` in root:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+MONGODB_URI=mongodb://localhost:27017/medlens
+JWT_SECRET=your_jwt_secret_key_here
+ENCRYPTION_KEY=your_32_byte_hex_key_here
+```
+
+Server-only secrets are never exposed to browser-side code.
 
 ---
 
-## 19. Validation & Testing
+## 30. Evaluation-Oriented Engineering
 
-MedLens includes automated validation for:
-* TypeScript compilation (`npx tsc --noEmit`)
-* Gemini structured output schema compliance
-* Zod input & output validation
-* AES-256-GCM encryption/decryption
-* SHA-256 duplicate report detection
-* Reference-range evaluation logic
-* Human verification audit logging
+MedLens is intentionally built around several engineering principles:
+1. **Source-of-Truth Preservation**: Original documents remain authoritative.
+2. **Schema-Constrained AI**: AI output must conform to schemas before entering trusted state.
+3. **Provenance-Aware Processing**: Information remains traceable to its origin.
+4. **Human-in-the-Loop Verification**: AI extraction can be reviewed, corrected, or rejected.
+5. **Deterministic Validation**: Where deterministic logic is possible, it is not delegated to an LLM.
+6. **Patient-Scoped Access**: Sensitive information is protected through server-side authorization boundaries.
+7. **Uncertainty-Aware UX**: Missing or ambiguous information remains visibly uncertain.
+8. **Responsible AI**: System avoids presenting AI conclusions as authoritative decisions.
 
-Run tests with:
-```bash
-npm test
+---
+
+## 31. Why MedLens Uses AI
+
+### AI is used where semantic understanding provides value:
+* Extracting structured information from complex medical documents and label images
+* Interpreting document layout and context
+* Generating patient-friendly summaries
+* Answering questions using retrieved patient-specific evidence
+
+### AI is intentionally NOT used as the authority for:
+* Authorization
+* Reference-range invention
+* Database integrity
+* Schema validation
+* Audit history
+* Security decisions
+* Deterministic comparisons
+
+---
+
+## 32. The MedLens Trust Model
+
+The central trust model is:
+```text
+SOURCE ──> EXTRACT ──> VALIDATE ──> TRACE ──> REVIEW ──> UNDERSTAND
+```
+
+Rather than:
+```text
+SOURCE ──> LLM ──> TRUST
+```
+
+This is the core architectural distinction between MedLens and a conventional medical document chatbot.
+
+---
+
+## 33. Demo Flow
+
+A complete demonstration follows one information lifecycle:
+
+```text
+1. Create Patient
+       ↓
+2. Enter Patient Intake Information
+       ↓
+3. Upload Medical Report (PDF / Image)
+       ↓
+4. Process Document (SHA-256 Hash + Text Extract)
+       ↓
+5. AI Extracts Structured Information (Gemini 1.5)
+       ↓
+6. Schema / Domain Validation (Zod)
+       ↓
+7. Display Structured Record (SideBySide View)
+       ↓
+8. Show Source Provenance (Page Citation & Text Highlight)
+       ↓
+9. Review / Correct Information (Verify / Edit / Reject)
+       ↓
+10. Preserve Audit History (Original AI value retained)
+       ↓
+11. Upload Historical Report
+       ↓
+12. Detect Recorded Changes & Conflicts
+       ↓
+13. Grounded Ask MedLens (RAG)
+       ↓
+14. Show Evidence Behind Answer
 ```
 
 ---
 
-## 20. Future Enhancements
+## 34. Responsible AI Statement
 
-* OCR engine integration for low-resolution scanned documents.
-* Multi-language laboratory report translation.
-* FHIR / HL7 clinical data export format.
+MedLens is a clinical information intelligence platform designed to help organize, structure, trace, compare, and review medical information.
+
+It does not replace professional clinical judgment. It does not provide autonomous diagnosis, treatment, or prescription decisions. AI-generated information remains distinguishable from source information and human-verified information.
+
+---
+
+## 35. Limitations
+
+MedLens is not intended to guarantee clinical correctness. Document quality, OCR quality, extraction quality, incomplete source information, ambiguous records, and model limitations can affect results.
+
+For that reason, MedLens emphasizes:
+* Source evidence
+* Structured validation
+* Provenance
+* Uncertainty
+* Human verification
+* Auditability
+
+The system communicates limitations rather than hiding them.
+
+---
+
+## 36. Competition Philosophy
+
+MedLens was designed around a simple idea:
+> **Don't just add AI. Build the system around responsible AI.**
+
+The project demonstrates how AI can be embedded inside a broader engineering architecture:
+```text
+AI + Validation + Security + Provenance + Human Oversight + Testing + Responsible AI
+```
+
+The objective is to make AI useful, bounded, inspectable, and reviewable.
+
+---
+
+## 37. Final Architecture Principle
+
+```text
+        MEDICAL SOURCES
+              ↓
+      STRUCTURED EXTRACTION
+              ↓
+          AI ASSIST
+              ↓
+       SCHEMA VALIDATION
+              ↓
+    DETERMINISTIC VALIDATION
+              ↓
+       PROVENANCE / EVIDENCE
+              ↓
+     SIGNALS & CONFLICTS
+              ↓
+      HUMAN VERIFICATION
+              ↓
+      STRUCTURED RECORD
+              ↓
+     GROUNDED AI ASSISTANCE
+```
+
+### Key Principle:
+> **AI assists. The system validates. The source remains authoritative. Humans remain in control.**
+
+### Build Philosophy:
+MedLens is not designed to demonstrate how much AI can generate. It is designed to demonstrate how effectively AI can be integrated into a trustworthy software system:
+
+```text
+Source → Structure → Validate → Trace → Review → Understand.
+```
